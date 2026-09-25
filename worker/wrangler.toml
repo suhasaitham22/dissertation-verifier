@@ -1,0 +1,6 @@
+name = "dissertation-verifier-worker"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Free tier: Workers free plan (100k requests/day)
+# Deploys with: npx wrangler deploy
