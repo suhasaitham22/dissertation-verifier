@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dissertation Verifier</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    .badge { display: inline-block; background: #eee; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.85rem; }
+    label { display: block; margin-top: 1rem; font-weight: 600; }
+    input, textarea, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem; font-size: 1rem; }
+    button { margin-top: 1rem; padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Dissertation Verifier</h1>
+  <p><span class="badge">Phase 0</span></p>
+  <p>Check whether a dissertation idea already exists and find ways to make it unique.</p>
+  <form id="idea-form">
+    <label>Title
+      <input type="text" name="title" placeholder="Working title of your dissertation" disabled />
+    </label>
+    <label>Abstract
+      <textarea name="abstract" rows="4" placeholder="Paste your abstract here" disabled></textarea>
+    </label>
+    <label>Keywords
+      <input type="text" name="keywords" placeholder="comma, separated, keywords" disabled />
+    </label>
+    <label>Field
+      <input type="text" name="field" placeholder="e.g. Computer Science" disabled />
+    </label>
+    <button type="submit" disabled>Search (coming in Phase 3)</button>
+  </form>
+  <p><small>Phase 0: static scaffold. Form fields are placeholders until the search UI ships.</small></p>
+</body>
+</html>
