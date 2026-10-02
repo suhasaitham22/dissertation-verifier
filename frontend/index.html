@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dissertation Verifier — Check if your idea already exists</title>
+  <meta name="description" content="Check whether a dissertation idea already exists and find ways to make it unique." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <nav class="nav glass">
+    <div class="brand"><span class="brand-mark"></span>Dissertation Verifier</div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-verifier" type="button">Verifier</button>
+      <button class="tab-btn" id="tab-apa" type="button">APA Helper</button>
+    </div>
+    <div class="auth-inline" id="auth-inline">
+      <span class="who" id="nav-user" style="display:none"></span>
+      <button class="btn btn-ghost" id="nav-auth-btn" type="button" style="padding:8px 16px; font-size:0.85rem;">Sign in</button>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <div id="view-verifier">
+    <section class="hero">
+      <h1>Is your dissertation idea <span class="grad">already taken?</span></h1>
+      <p>Paste your idea and search dissertations and papers across OpenAlex, Crossref, and Semantic Scholar — then get concrete ways to make it unique.</p>
+    </section>
+
+    <section class="search-card glass">
+      <form id="idea-form">
+        <div class="grid">
+          <div class="field full">
+            <label for="f-title">Working title</label>
+            <input class="input" id="f-title" type="text" placeholder="e.g. Retrieval-augmented generation for clinical notes" />
+          </div>
+          <div class="field full">
+            <label for="f-abstract">Abstract</label>
+            <textarea class="input" id="f-abstract" placeholder="Paste your abstract or a paragraph describing the idea…"></textarea>
+          </div>
+          <div class="field">
+            <label for="f-keywords">Keywords</label>
+            <input class="input" id="f-keywords" type="text" placeholder="comma, separated, keywords" />
+          </div>
+          <div class="field">
+            <label for="f-field">Field</label>
+            <input class="input" id="f-field" type="text" placeholder="e.g. Computer Science" />
+          </div>
+          <div class="actions">
+            <button class="btn" id="btn-search" type="submit">Check originality</button>
+            <span class="hint" id="search-hint">Sign in to save your search history.</span>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section id="results" aria-live="polite"></section>
+    </div><!-- /view-verifier -->
+
+    <div id="view-apa" style="display:none">
+      <section class="hero">
+        <h1>APA 7th, <span class="grad">without the headache.</span></h1>
+        <p>Pick a source type, fill in the fields, and get a formatted reference — with a checker that flags what's missing.</p>
+      </section>
+
+      <section class="glass apa-card">
+        <h3>Build a reference</h3>
+        <div class="tpl-row" id="tpl-row"></div>
+        <div id="apa-form"></div>
+        <div id="apa-out"></div>
+      </section>
+
+      <section class="glass apa-card">
+        <h3>Fix a messy reference</h3>
+        <p class="apa-sub">Paste a rough reference — the parser will pull out authors, year, title, and source, then check what's missing. Best-effort: always review before submitting.</p>
+        <div class="field">
+          <label for="paste-ref">Pasted reference</label>
+          <textarea class="input" id="paste-ref" placeholder="e.g. Smith, J., & Doe, A. (2021). Deep learning for x-rays. Journal of Medical AI, 4(2), 10-25. https://doi.org/10.1234/abcd"></textarea>
+        </div>
+        <div class="actions" style="margin-top:14px">
+          <button class="btn" id="btn-parse" type="button">Parse &amp; format</button>
+        </div>
+        <div id="parse-out"></div>
+      </section>
+    </div><!-- /view-apa -->
+
+    <footer>Dissertation Verifier · free-tier build · coverage is broad but not exhaustive</footer>
+  </div>
+
+  <div id="modal-root"></div>
+  <script src="app.js"></script>
+  <script src="apa.js"></script>
+</body>
+</html>
