@@ -7,6 +7,7 @@ const WORKER_URL = "https://dissertation-verifier-worker.suhasaitham22.workers.d
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = (id) => document.getElementById(id);
 
+/* ---------------- auth (modal) ---------------- */
 let authMode = "signin";
 
 function openAuthModal(mode) {
@@ -72,6 +73,7 @@ async function refreshAuthUI() {
 sb.auth.onAuthStateChange(() => refreshAuthUI());
 refreshAuthUI();
 
+/* ---------------- search ---------------- */
 const form = $("idea-form");
 const resultsEl = $("results");
 const searchBtn = $("btn-search");
@@ -147,14 +149,57 @@ function renderResults(data, q) {
   resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+async function getEmbedding(text) {
+  const res = await fetch(WORKER_URL + "/api/embed", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Embedding failed");
+  return data.embedding;
+}
+
+async function checkDuplicate(q) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return null;
+    const text = [q.title, q.abstract].filter(Boolean).join("\n");
+    if (!text.trim()) return null;
+    const embedding = await getEmbedding(text);
+    const { data, error } = await sb.rpc("match_ideas", {
+      query_embedding: embedding,
+      match_threshold: 0.82,
+      match_count: 3,
+    });
+    if (error || !data || !data.length) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function duplicateNotice(matches) {
+  const m = matches[0];
+  const pct = Math.round(m.similarity * 100);
+  const when = m.created_at ? new Date(m.created_at).toLocaleDateString() : "";
+  return `<div class="notice glass">Heads up — this looks <b>${pct}% similar</b> to an idea you already checked${when ? ` on ${esc(when)}` : ""}: <b>${esc(m.title || "untitled")}</b>.${matches.length > 1 ? ` Plus ${matches.length - 1} more similar past ${matches.length - 1 === 1 ? "search" : "searches"}.` : ""}</div>`;
+}
+
 async function saveSearch(q, data) {
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return;
     const kwArr = q.keywords.split(",").map((s) => s.trim()).filter(Boolean);
+    let embedding = null;
+    try {
+      const text = [q.title, q.abstract].filter(Boolean).join("\n");
+      if (text.trim()) embedding = await getEmbedding(text);
+    } catch { /* embedding is best-effort */ }
     const { data: idea, error } = await sb.from("ideas").insert({
       user_id: session.user.id,
       title: q.title, abstract: q.abstract, keywords: kwArr, field: q.field,
+      embedding,
     }).select("id").single();
     if (error || !idea) return;
     await sb.from("searches").insert({ idea_id: idea.id, results: data.results.slice(0, 20) });
@@ -185,6 +230,11 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Search failed");
     renderResults(data, q);
+    checkDuplicate(q).then((matches) => {
+      if (matches && matches.length) {
+        resultsEl.insertAdjacentHTML("afterbegin", duplicateNotice(matches));
+      }
+    });
     saveSearch(q, data);
   } catch (err) {
     showError(err.message || "Network error");
