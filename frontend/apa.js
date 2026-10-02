@@ -148,7 +148,12 @@ function renderTplRow() {
     `<button type="button" class="tpl-card${k === apaType ? " active" : ""}" data-tpl="${k}">${esc(t.label)}</button>`
   ).join("");
   document.querySelectorAll("#tpl-row [data-tpl]").forEach((b) =>
-    b.addEventListener("click", () => { apaType = b.dataset.tpl; renderTplRow(); renderApaForm(); })
+    b.addEventListener("click", () => {
+      apaType = b.dataset.tpl;
+      $("parse-out").innerHTML = "";
+      renderTplRow();
+      renderApaForm();
+    })
   );
 }
 
@@ -213,12 +218,16 @@ function copyText(btn, text) {
 
 /* ---- messy-reference parser (best-effort) ---- */
 function normalizeAuthors(raw) {
+  const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   const parts = raw.split(/\s*;\s*|\s+&\s+|\s+and\s+/i).map((s) => s.trim()).filter(Boolean);
   const norm = parts.map((p) => {
-    if (/,/.test(p)) return p.replace(/\s+/g, " ").replace(/,+$/, "").trim();
+    if (/,/.test(p)) {
+      const [fam, ...rest] = p.split(",");
+      return ([cap(fam.trim()), ...rest].join(",")).replace(/\s+/g, " ").replace(/,+$/, "").trim();
+    }
     const words = p.split(/\s+/);
-    if (words.length < 2) return p;
-    const last = words[words.length - 1];
+    if (words.length < 2) return cap(p);
+    const last = cap(words[words.length - 1]);
     const initials = words.slice(0, -1).map((w) => w.replace(/\./g, "").charAt(0).toUpperCase() + ".").join(" ");
     return `${last}, ${initials}`;
   });
@@ -229,6 +238,7 @@ function normalizeAuthors(raw) {
 function parseReference() {
   const raw = $("paste-ref").value.trim();
   const out = $("parse-out");
+  out.innerHTML = "";
   if (!raw) { out.innerHTML = `<div class="notice err glass">Paste a reference first.</div>`; return; }
   const t = raw.replace(/\s+/g, " ");
   const bag = {};
@@ -239,25 +249,22 @@ function parseReference() {
   if (ym) {
     bag.year = ym[0].replace(/[()]/g, "").replace(/[a-z]$/, "");
     const yi = t.indexOf(ym[0]);
-    const aRaw = t.slice(0, yi).trim().replace(/[.,;]+$/, "");
+    const aRaw = t.slice(0, yi).trim().replace(/[,;]+$/, "");
     if (aRaw) bag.authors = normalizeAuthors(aRaw);
     rest = t.slice(yi + ym[0].length).trim().replace(/^\.\s*/, "");
   } else {
     notes.push("Couldn't find a (Year) — add it in the form.");
+    const am = t.match(/^([A-Z][^.(]*,\s*[A-Z][^.(]{0,30}?)\.\s+(?=[A-Z])/);
+    if (am) {
+      bag.authors = normalizeAuthors(am[1]);
+      rest = t.slice(am[0].length).trim();
+    }
   }
 
   const um = rest.match(/https?:\/\/[^\s)]+|doi:\s*[^\s]+|10\.\d{4,}\/[^\s)]+/i);
   if (um) {
     bag.doi = um[0].replace(/[.,;)\]]+$/, "");
     rest = rest.replace(um[0], " ").replace(/\s+/g, " ").trim();
-  }
-
-  let journal = "";
-  const vm = rest.match(/,\s*(\d+)\s*\((\d+)\)\s*,?\s*(\d+\s*[–—-]\s*\d+|\d+)/);
-  if (vm) {
-    bag.volume = vm[1]; bag.issue = vm[2]; bag.pages = vm[3].replace(/\s+/g, "");
-    journal = rest.slice(0, vm.index).trim();
-    rest = rest.slice(vm.index + vm[0].length).trim().replace(/^[.,;]\s*/, "");
   }
 
   let title = "", source = "";
@@ -268,8 +275,20 @@ function parseReference() {
     if (pi > 0) { title = rest.slice(0, pi + 1); source = rest.slice(pi + 1).trim(); }
     else title = rest;
   }
-  if (title) bag.article = title.replace(/\.$/, "").trim();
+  title = title
+    .replace(/\s*\[Doctoral dissertation,[^\]]*\]/gi, "")
+    .replace(/\s*\(Publication No\.[^)]*\)/gi, "")
+    .replace(/\.$/, "").trim();
+  if (title) bag.article = title;
   else notes.push("Couldn't split the title from the source — check the title field.");
+
+  let journal = "";
+  const vm = source.match(/,\s*(\d+)\s*\((\d+)\)\s*,?\s*(\d+\s*[–—-]\s*\d+|\d+)/);
+  if (vm) {
+    bag.volume = vm[1]; bag.issue = vm[2]; bag.pages = vm[3].replace(/\s+/g, "");
+    journal = source.slice(0, vm.index).trim();
+    source = source.slice(vm.index + vm[0].length).trim().replace(/^[.,;]\s*/, "");
+  }
 
   const low = t.toLowerCase();
   let guess = "journal";
