@@ -235,7 +235,7 @@ form.addEventListener("submit", async (e) => {
     // Phase 4: check history BEFORE saving, so the current idea can't match itself
     const matches = await checkDuplicate(q);
     if (matches && matches.length) {
-            resultsEll.insertAdjacentHTML("afterbegin", duplicateNotice(matches));
+      resultsEl.insertAdjacentHTML("afterbegin", duplicateNotice(matches));
     }
     await saveSearch(q, data);
   } catch (err) {
