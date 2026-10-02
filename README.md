@@ -8,7 +8,7 @@ Is your PhD dissertation idea already taken? Type in a working title, abstract, 
 
 A narrated end-to-end walkthrough: sign up → originality check → duplicate detection → uniqueness gaps → APA helper.
 
-<video src="https://github.com/suhasaitham22/dissertation-verifier/releases/download/demo/dissertation-verifier-demo.mp4" controls width="100%"></video>
+https://github.com/suhasaitham22/dissertation-verifier/releases/download/demo/dissertation-verifier-demo.mp4
 
 ## Features
 
