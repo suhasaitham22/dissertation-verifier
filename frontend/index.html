@@ -4,18 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dissertation Verifier</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
     .badge { display: inline-block; background: #eee; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.85rem; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
     label { display: block; margin-top: 1rem; font-weight: 600; }
-    input, textarea, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem; font-size: 1rem; }
+    input, textarea, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem; font-size: 1rem; box-sizing: border-box; }
     button { margin-top: 1rem; padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; }
+    .row { display: flex; gap: 0.5rem; }
+    #auth-status { color: #b00; margin-top: 0.5rem; min-height: 1.2em; }
   </style>
 </head>
 <body>
   <h1>Dissertation Verifier</h1>
-  <p><span class="badge">Phase 0</span></p>
+  <p><span class="badge">Phase 1</span></p>
   <p>Check whether a dissertation idea already exists and find ways to make it unique.</p>
+  <div class="card" id="auth-card">
+    <h2>Account</h2>
+    <div id="auth-logged-out">
+      <label>Email
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" />
+      </label>
+      <label>Password
+        <input type="password" id="auth-password" placeholder="Choose a password" autocomplete="current-password" />
+      </label>
+      <div class="row">
+        <button id="btn-signup" type="button">Sign up</button>
+        <button id="btn-login" type="button">Log in</button>
+      </div>
+      <p id="auth-status"></p>
+    </div>
+    <div id="auth-logged-in" style="display:none">
+      <p>Signed in as <strong id="auth-user-email"></strong></p>
+      <button id="btn-logout" type="button">Log out</button>
+    </div>
+  </div>
   <form id="idea-form">
     <label>Title
       <input type="text" name="title" placeholder="Working title of your dissertation" disabled />
@@ -31,6 +55,7 @@
     </label>
     <button type="submit" disabled>Search (coming in Phase 3)</button>
   </form>
-  <p><small>Phase 0: static scaffold. Form fields are placeholders until the search UI ships.</small></p>
+  <p><small>Phase 1: auth is live. Search UI ships in Phase 3.</small></p>
+  <script src="app.js"></script>
 </body>
 </html>
