@@ -194,6 +194,16 @@ textarea.input { resize: vertical; min-height: 110px; }
 
 footer { text-align: center; color: #475569; font-size: 0.82rem; margin-top: 60px; }
 
+/* ---------- gap analysis (Phase 5) ---------- */
+.gaps { padding: 24px; margin: 26px 0; animation: cardIn 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+.gaps h3 { font-family: var(--font-display); margin: 0 0 12px; font-size: 1.2rem; }
+.gaps-covered { color: #cbd5e1; font-size: 0.95rem; line-height: 1.65; margin: 0 0 8px; }
+.gap-item { margin: 12px 0; padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07); }
+.gap-item b { display: block; margin-bottom: 6px; color: #c4b5fd; font-size: 0.95rem; }
+.gap-item span { color: #cbd5e1; font-size: 0.92rem; line-height: 1.6; }
+.gaps .raw { white-space: pre-wrap; font-family: var(--font-body); font-size: 0.92rem; line-height: 1.65; color: #cbd5e1; margin: 0; }
+.disclaimer { font-size: 0.8rem; color: var(--muted); margin: 14px 0 0; }
+
 @media (max-width: 640px) {
   .search-card .grid { grid-template-columns: 1fr; }
   .nav { top: 10px; margin: 10px 12px 0; }

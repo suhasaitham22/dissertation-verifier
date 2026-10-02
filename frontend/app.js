@@ -1,5 +1,4 @@
 // Dissertation Verifier - frontend (Phase 3: premium UI + search)
-
 // Supabase anon key is designed to be public in frontend code; RLS protects the data.
 const SUPABASE_URL = "https://uklhqmvkuataddjkjzms.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrbGhxbXZrdWF0YWRkamtqem1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NTg4ODgsImV4cCI6MjEwNjUzNDg4OH0.LZueWxUwt_kTZem1itJfbwcMVJMb_D4tuePaO-kROlY";
@@ -24,7 +23,7 @@ function openAuthModal(mode) {
         </div>
         <div class="field">
           <label for="m-password">Password</label>
-          <input class="input" id="m-password" type="password" placeholder="********" autocomplete="${authMode === "signin" ? "current-password" : "new-password"}" />
+          <input class="input" id="m-password" type="password" placeholder="••••••••" autocomplete="${authMode === "signin" ? "current-password" : "new-password"}" />
         </div>
         <button class="btn" id="m-submit" type="button" style="width:100%">${authMode === "signin" ? "Sign in" : "Sign up"}</button>
         <p class="status" id="m-status"></p>
@@ -78,6 +77,7 @@ refreshAuthUI();
 const form = $("idea-form");
 const resultsEl = $("results");
 const searchBtn = $("btn-search");
+let lastSearch = null; // { q, results } — used by Phase 5 gap analysis
 
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -118,7 +118,9 @@ function renderResults(data, q) {
       <h2>${data.total} matching ${data.total === 1 ? "work" : "works"} found</h2>
       <div class="meta"><span>${esc(countsLine)}</span>${data.errors ? `<span>Note: ${esc(Object.keys(data.errors).join(", "))} rate-limited this run — results may grow on retry.</span>` : ""}</div>
       <div><span class="verdict ${verdict.cls}">${esc(verdict.text)}</span></div>
-    </div>`;
+      <div style="margin-top:14px"><button class="btn btn-ghost" id="btn-gaps" type="button">Analyze uniqueness gaps</button></div>
+    </div>
+    <div id="gaps-out"></div>`;
 
   if (!data.results.length) {
     html += `<div class="empty glass">No close matches found. That is a good sign for originality — but double-check with a broader keyword set too.</div>`;
@@ -148,6 +150,62 @@ function renderResults(data, q) {
 
   resultsEl.innerHTML = html;
   resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  const gapsBtn = $("btn-gaps");
+  if (gapsBtn && lastSearch) {
+    gapsBtn.addEventListener("click", () => analyzeGaps(gapsBtn));
+  }
+}
+
+/* ---------------- Phase 5: gap analysis ---------------- */
+async function analyzeGaps(btn) {
+  const box = $("gaps-out");
+  if (!lastSearch || !box) return;
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = "Analyzing…";
+  box.innerHTML = `<div class="skel glass"><div class="line" style="width:70%"></div><div class="line" style="width:96%"></div><div class="line" style="width:50%"></div></div>`;
+  box.scrollIntoView({ behavior: "smooth", block: "start" });
+  try {
+    const res = await fetch(WORKER_URL + "/api/gaps", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea: lastSearch.q, results: lastSearch.results.slice(0, 8) }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Gap analysis failed");
+    renderGaps(data.suggestions);
+  } catch (err) {
+    box.innerHTML = `<div class="notice err glass"><b>Couldn't generate suggestions.</b> ${esc(err.message || "Unknown error")}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+function renderGaps(text) {
+  const box = $("gaps-out");
+  let body = "";
+  try {
+    const g = JSON.parse(text);
+    const gaps = Array.isArray(g.gaps) ? g.gaps : [];
+    body =
+      (g.covered ? `<p class="gaps-covered">${esc(g.covered)}</p>` : "") +
+      gaps.map((gp, i) => `
+        <div class="gap-item">
+          <b>${i + 1}. ${esc(gp.angle || "Angle")}</b>
+          <span>${esc(gp.detail || "")}</span>
+        </div>`).join("");
+    if (!body.trim()) throw new Error("empty");
+  } catch {
+    body = `<pre class="raw">${esc(text)}</pre>`;
+  }
+  box.innerHTML = `
+    <div class="gaps glass">
+      <h3>Ways to make it yours</h3>
+      ${body}
+      <p class="disclaimer">AI-generated positioning ideas — verify each against the actual literature before committing.</p>
+    </div>`;
+  box.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function getEmbedding(text) {
@@ -162,7 +220,6 @@ async function getEmbedding(text) {
 }
 
 async function checkDuplicate(q) {
-  // Semantic duplicate check against the user's own past ideas (Phase 4)
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return null;
@@ -231,8 +288,8 @@ form.addEventListener("submit", async (e) => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Search failed");
+    lastSearch = { q, results: data.results || [] };
     renderResults(data, q);
-    // Phase 4: check history BEFORE saving, so the current idea can't match itself
     const matches = await checkDuplicate(q);
     if (matches && matches.length) {
       resultsEl.insertAdjacentHTML("afterbegin", duplicateNotice(matches));
