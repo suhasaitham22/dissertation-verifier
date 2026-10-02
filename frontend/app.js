@@ -1,4 +1,5 @@
 // Dissertation Verifier - frontend (Phase 3: premium UI + search)
+
 // Supabase anon key is designed to be public in frontend code; RLS protects the data.
 const SUPABASE_URL = "https://uklhqmvkuataddjkjzms.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrbGhxbXZrdWF0YWRkamtqem1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NTg4ODgsImV4cCI6MjEwNjUzNDg4OH0.LZueWxUwt_kTZem1itJfbwcMVJMb_D4tuePaO-kROlY";
@@ -161,6 +162,7 @@ async function getEmbedding(text) {
 }
 
 async function checkDuplicate(q) {
+  // Semantic duplicate check against the user's own past ideas (Phase 4)
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return null;
@@ -169,7 +171,7 @@ async function checkDuplicate(q) {
     const embedding = await getEmbedding(text);
     const { data, error } = await sb.rpc("match_ideas", {
       query_embedding: embedding,
-      match_threshold: 0.82,
+      match_threshold: 0.70,
       match_count: 3,
     });
     if (error || !data || !data.length) return null;
@@ -230,12 +232,12 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Search failed");
     renderResults(data, q);
-    checkDuplicate(q).then((matches) => {
-      if (matches && matches.length) {
-        resultsEl.insertAdjacentHTML("afterbegin", duplicateNotice(matches));
-      }
-    });
-    saveSearch(q, data);
+    // Phase 4: check history BEFORE saving, so the current idea can't match itself
+    const matches = await checkDuplicate(q);
+    if (matches && matches.length) {
+            resultsEll.insertAdjacentHTML("afterbegin", duplicateNotice(matches));
+    }
+    await saveSearch(q, data);
   } catch (err) {
     showError(err.message || "Network error");
   } finally {
