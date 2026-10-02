@@ -6,9 +6,18 @@ Is your PhD dissertation idea already taken? Type in a working title, abstract, 
 
 ## Demo
 
-A narrated end-to-end walkthrough: sign up → originality check → duplicate detection → uniqueness gaps → APA helper.
+<p align="center">
+  <a href="https://github.com/suhasaitham22/dissertation-verifier/releases/download/demo/dissertation-verifier-demo.mp4"><img src="demo/thumbnail.png" alt="Watch the demo video"></a>
+</p>
 
-https://github.com/suhasaitham22/dissertation-verifier/releases/download/demo/dissertation-verifier-demo.mp4
+**What this project does:** Dissertation Verifier is a free web app for PhD students to check whether their dissertation idea is already taken. Type a working title, abstract, and keywords — it searches dissertations and papers across OpenAlex, Crossref, and Semantic Scholar, shows ranked matches with links plus an overall overlap verdict, warns you if you've already explored a similar idea (AI-powered duplicate detection), suggests concrete ways to make your idea unique, and formats your references in APA 7th.
+
+**What the video shows** — a narrated, ~80-second walkthrough recorded on the live app (not a slideshow):
+1. Signing up and signing in
+2. Running an originality check on a crowded topic → 25 matching works with a "High overlap" verdict
+3. Duplicate detection flagging an 88%-similar paraphrase of an earlier idea
+4. AI-generated uniqueness gaps with concrete differentiation angles
+5. The APA 7th helper formatting a reference and flagging missing fields
 
 ## Features
 
