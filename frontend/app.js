@@ -69,6 +69,9 @@ async function refreshAuthUI() {
     btn.onclick = () => openAuthModal("signin");
     hint.textContent = "Sign in to save your search history.";
   }
+  if (typeof loadHistory === "function" && $("view-history") && $("view-history").style.display !== "none") {
+    loadHistory();
+  }
 }
 sb.auth.onAuthStateChange(() => refreshAuthUI());
 refreshAuthUI();
@@ -220,6 +223,7 @@ async function getEmbedding(text) {
 }
 
 async function checkDuplicate(q) {
+  // Semantic duplicate check against the user's own past ideas (Phase 4)
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return null;
@@ -234,7 +238,7 @@ async function checkDuplicate(q) {
     if (error || !data || !data.length) return null;
     return data;
   } catch {
-    return null;
+    return null; // duplicate check is best-effort
   }
 }
 
@@ -288,8 +292,9 @@ form.addEventListener("submit", async (e) => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Search failed");
-    lastSearch = { q, results: data.results || [] };
+    lastSearch = { q, results: data.results || [] }; // Phase 5: gap analysis input
     renderResults(data, q);
+    // Phase 4: check history BEFORE saving, so the current idea can't match itself
     const matches = await checkDuplicate(q);
     if (matches && matches.length) {
       resultsEl.insertAdjacentHTML("afterbegin", duplicateNotice(matches));

@@ -132,16 +132,18 @@ const APA_TEMPLATES = {
 let apaType = "journal";
 const apaState = {};
 
+const VIEW_IDS = { verifier: "view-verifier", apa: "view-apa", history: "view-history" };
+const TAB_IDS = { verifier: "tab-verifier", apa: "tab-apa", history: "tab-history" };
+
 function switchView(name) {
-  const toApa = name === "apa";
-  $("view-verifier").style.display = toApa ? "none" : "";
-  $("view-apa").style.display = toApa ? "" : "none";
-  $("tab-verifier").classList.toggle("active", !toApa);
-  $("tab-apa").classList.toggle("active", toApa);
+  Object.entries(VIEW_IDS).forEach(([k, id]) => { $(id).style.display = k === name ? "" : "none"; });
+  Object.entries(TAB_IDS).forEach(([k, id]) => { $(id).classList.toggle("active", k === name); });
+  if (name === "history" && typeof loadHistory === "function") loadHistory();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 $("tab-verifier").addEventListener("click", () => switchView("verifier"));
 $("tab-apa").addEventListener("click", () => switchView("apa"));
+$("tab-history").addEventListener("click", () => switchView("history"));
 
 function renderTplRow() {
   $("tpl-row").innerHTML = Object.entries(APA_TEMPLATES).map(([k, t]) =>
@@ -150,7 +152,7 @@ function renderTplRow() {
   document.querySelectorAll("#tpl-row [data-tpl]").forEach((b) =>
     b.addEventListener("click", () => {
       apaType = b.dataset.tpl;
-      $("parse-out").innerHTML = "";
+      $("parse-out").innerHTML = ""; // notes belong to the last parse, not the new template
       renderTplRow();
       renderApaForm();
     })
@@ -238,7 +240,7 @@ function normalizeAuthors(raw) {
 function parseReference() {
   const raw = $("paste-ref").value.trim();
   const out = $("parse-out");
-  out.innerHTML = "";
+  out.innerHTML = ""; // clear stale notes from any previous parse
   if (!raw) { out.innerHTML = `<div class="notice err glass">Paste a reference first.</div>`; return; }
   const t = raw.replace(/\s+/g, " ");
   const bag = {};
@@ -254,6 +256,7 @@ function parseReference() {
     rest = t.slice(yi + ym[0].length).trim().replace(/^\.\s*/, "");
   } else {
     notes.push("Couldn't find a (Year) — add it in the form.");
+    // Fallback: a leading "Last, F." author block (comma required so titles aren't eaten)
     const am = t.match(/^([A-Z][^.(]*,\s*[A-Z][^.(]{0,30}?)\.\s+(?=[A-Z])/);
     if (am) {
       bag.authors = normalizeAuthors(am[1]);
@@ -267,6 +270,7 @@ function parseReference() {
     rest = rest.replace(um[0], " ").replace(/\s+/g, " ").trim();
   }
 
+  // Title FIRST (before volume/journal extraction), then the source remainder
   let title = "", source = "";
   const ti = rest.search(/\.\s+[A-Z(]/);
   if (ti > 0) { title = rest.slice(0, ti + 1); source = rest.slice(ti + 1).trim().replace(/^\.\s*/, ""); }

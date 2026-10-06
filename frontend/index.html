@@ -23,6 +23,7 @@
     <div class="tabs">
       <button class="tab-btn active" id="tab-verifier" type="button">Verifier</button>
       <button class="tab-btn" id="tab-apa" type="button">APA Helper</button>
+      <button class="tab-btn" id="tab-history" type="button">History</button>
     </div>
     <div class="auth-inline" id="auth-inline">
       <span class="who" id="nav-user" style="display:none"></span>
@@ -94,11 +95,20 @@
       </section>
     </div><!-- /view-apa -->
 
+    <div id="view-history" style="display:none">
+      <section class="hero">
+        <h1>Your search <span class="grad">history.</span></h1>
+        <p>Every idea you have checked, in one place. Revisit past searches or clear them out.</p>
+      </section>
+      <section id="history-list" aria-live="polite"></section>
+    </div><!-- /view-history -->
+
     <footer>Dissertation Verifier · free-tier build · coverage is broad but not exhaustive</footer>
   </div>
 
   <div id="modal-root"></div>
   <script src="app.js"></script>
+  <script src="history.js"></script>
   <script src="apa.js"></script>
 </body>
 </html>
